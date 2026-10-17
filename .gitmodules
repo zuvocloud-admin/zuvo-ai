@@ -1,0 +1,6 @@
+[submodule ".skills/agentic-awesome-skills"]
+	path = .skills/agentic-awesome-skills
+	url = https://github.com/sickn33/agentic-awesome-skills.git
+[submodule ".skills/gemini-skills"]
+	path = .skills/gemini-skills
+	url = https://github.com/google-gemini/gemini-skills.git

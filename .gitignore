@@ -98,6 +98,4 @@ desktop.ini
 ~$*.xlsx
 ~$*.pptx
 
-# Agent & AI Assistant Tool Directories
-.skills/
-.agents/
+
