@@ -1,0 +1,108 @@
+version: '3.8'
+
+services:
+  # ----------------------------------------------------------------------------
+  # 1. ZuvoCloud React Owner Command Center Frontend
+  # ----------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: zuvocloud_frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    networks:
+      - zuvo_network
+
+  # ----------------------------------------------------------------------------
+  # 2. ZuvoCloud FastAPI Core Service
+  # ----------------------------------------------------------------------------
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: zuvocloud_api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - DATABASE_URL=postgresql+asyncpg://zuvo_user:zuvo_password@postgres:5432/zuvo_db
+      - REDIS_URL=redis://redis:6379/0
+      - META_VERIFY_TOKEN=${META_VERIFY_TOKEN:-zuvo_secret_verify_token_jaipur_2026}
+      - META_APP_SECRET=${META_APP_SECRET:-fnDIcP_uXKsQ2x_ev9LPRJE5xAY}
+      - META_SYSTEM_USER_TOKEN=${META_SYSTEM_USER_TOKEN:-EAAZAGsMDf2PgBSaYjJEOvvjAadsoMx3mGCbZAeePt1KF4um2N9uOZC8bssaRXQOOeDFqqctP5NqZCQUrYSmX5C13KvGF9rC3TnEgoGfM3Tl4MncJ5SM21gZCV0ZBZClvpcWwZAE5HA0vQ4bBZClCiskw8kvZBtxBAmefR73J6EqXBDOfDGorKWySZBlpmyHIVTUpxFS33BdVLQrdUekTafips1umzrbSBuhAjy7ZBlgZBshZCsLM9fWZABjPrULCvUjtXYzVy7li3mDAxRKZBJNiVosfgMUYNZCEfhF4iBE4KOdwU3G0ZD}
+      - META_PHONE_NUMBER_ID=${META_PHONE_NUMBER_ID:-1312713255253790}
+      - REQUIRE_HMAC_VERIFICATION=${REQUIRE_HMAC_VERIFICATION:-false}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - zuvo_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v1/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+  # ----------------------------------------------------------------------------
+  # 3. PostgreSQL Relational Database (Multi-Tenant Persistent Storage)
+  # ----------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: zuvocloud_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: zuvo_user
+      POSTGRES_PASSWORD: zuvo_password
+      POSTGRES_DB: zuvo_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - zuvo_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U zuvo_user -d zuvo_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ----------------------------------------------------------------------------
+  # 3. Redis In-Memory Cache (Idempotency & Deduplication Engine)
+  # ----------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    container_name: zuvocloud_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - zuvo_network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# ------------------------------------------------------------------------------
+# Networks & Persistent Volumes
+# ------------------------------------------------------------------------------
+networks:
+  zuvo_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local

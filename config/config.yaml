@@ -1,0 +1,38 @@
+app:
+  name: "ZuvoCloud WhatsApp AI Operations Platform"
+  version: "1.0.0"
+  env: "development"
+  debug: true
+  api_prefix: "/api/v1"
+  host: "0.0.0.0"
+  port: 8010
+
+database:
+  url: "sqlite+aiosqlite:///./zuvo_local.db"
+  echo_sql: false
+  pool_size: 20
+  max_overflow: 10
+
+redis:
+  url: "redis://localhost:6379/0"
+  idempotency_ttl_seconds: 86400  # 24 hours
+
+whatsapp:
+  meta_api_version: "v20.0"
+  base_url: "https://graph.facebook.com"
+  verify_token: "zuvo_secret_verify_token_jaipur_2026"
+  app_secret: "fnDIcP_uXKsQ2x_ev9LPRJE5xAY"
+  system_user_token: "EAAZAGsMDf2PgBSVy0dEFgigaALTxBsqHd2rmbF8fbEZAnBHDKB6EZCU986p9furjauTooL3ZCXOzwPDytxk3BzfxvCZCJp2jGDBfLrsUyMj0jlXi5rVTzDiCpgSezstCJx8OtbTKi4RlRL4oGrZBgpu6B0NwITmcZCgQrT4BLH8lcCnB4Asrl0d0yozo2go9G6BS6GvAPcQo3CpgH9QLri0MYE5T86LLozYOO1htuAsTk2nrlKhYCekO57H1KLxXUJvlmC7Q0zLykut9Iblv9JhSqhVza36H9MX72ea1JQZD"
+  phone_number_id: "1312713255253790"
+  request_timeout_seconds: 10
+
+security:
+  require_hmac_verification: false  # true in production, false for local dev flexibility
+  allowed_origins:
+    - "http://localhost:3000"
+    - "http://localhost:8000"
+    - "http://127.0.0.1:3000"
+
+limits:
+  max_inbound_queue_size: 1000
+  rate_limit_requests_per_minute: 600
